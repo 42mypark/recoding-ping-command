@@ -1,5 +1,21 @@
-// setsockopt
-//
+/* allowed functions
+◦ getpid. (?)
+◦ getuid. (?)
+◦ getaddrinfo.
+◦ freeaddrinfo.
+◦ gettimeofday. (?)
+◦ inet_ntop.
+◦ inet_pton.
+◦ exit.
+◦ signal. (?)
+◦ alarm. (?)
+◦ setsockopt.
+◦ recvmsg.
+◦ sendto.
+◦ socket.
+◦ printf and its family.
+◦ Your libft functions.
+*/
 
 #include <arpa/inet.h>
 #include <netdb.h>
@@ -100,9 +116,14 @@
 
 void extract_addr(struct sockaddr* addr) {
   struct addrinfo* res;
-  struct addrinfo* rp;
+  // struct addrinfo* rp;
   int error = getaddrinfo("www.google.com", "80", NULL, &res);
+  if (error) {
+    printf("Error getaddrinfo\n");
+    exit(1);
+  }
   *addr = *res->ai_addr;
+  freeaddrinfo(res);
 }
 
 unsigned short checksum_2byte(void* buffer, unsigned int byte_size) {
@@ -152,10 +173,10 @@ int main() {
   ip->version = 4;
   ip->tos = 0;  // ?
   ip->tot_len = sizeof(buffer);
-  ip->id = 0;  // ?
+  ip->id = 0;  // unique per tuple (src, dst, protocol), if (IP_DF) ignorable
   ip->frag_off = 0;
   ip->frag_off |= htons(IP_DF);  // why is not working? -> endian
-  ip->ttl = 255;                 // 64
+  ip->ttl = 1;                   // os default 64
   ip->protocol = IPPROTO_ICMP;
   ip->saddr = src.sin_addr.s_addr;
   ip->daddr = dst->sin_addr.s_addr;
@@ -165,14 +186,43 @@ int main() {
 
   icmphdr->type = 8;
   icmphdr->code = 0;
-  icmphdr->un.echo.id = 0xb677;  // ? (LE) 0xb677 (BE) 0x77b6 -> not fixed... ->
-                                 // the id of icmp echo reply is same.
+  icmphdr->un.echo.id = 0;             // ? not fixed...
+                                       // the id of icmp echo reply is same.
   icmphdr->un.echo.sequence = 0x0100;  // (LE) 0x0100 increase
-  strcpy(icmpdata, "hello");           // not allowed func
+  strcpy((char*)icmpdata, "hello");    // not allowed func
   icmphdr->checksum =
       checksum_2byte(icmphdr, sizeof(buffer) - sizeof(struct iphdr));
 
   printf("%04x\n", icmphdr->checksum);
 
   sendto(fd, buffer, BUFFER_SIZE, 0, &dst_addr, sizeof(dst_addr));
+
+  struct msghdr msg;
+  struct iovec iov[1];
+  struct cmsghdr cmsg;
+
+  iov[0].iov_base = malloc(BUFFER_SIZE);
+  memset(iov[0].iov_base, 0, BUFFER_SIZE);
+  iov[0].iov_len = BUFFER_SIZE;
+
+  msg.msg_name = NULL;  // source address
+  msg.msg_namelen = 0;
+  msg.msg_iov = iov;
+  msg.msg_iovlen = 1;
+  msg.msg_control = &cmsg;            // ?
+  msg.msg_controllen = sizeof(cmsg);  // ?
+
+  printf("%ld\n", cmsg.cmsg_len);
+  printf("%d\n", cmsg.cmsg_level);
+  printf("%d\n", cmsg.cmsg_type);
+
+  recvmsg(fd, &msg, MSG_WAITALL);
+  unsigned char* recved = msg.msg_iov->iov_base;
+  int size = msg.msg_iov->iov_len;
+  for (int l = 0; l < size / 16 + 1; ++l) {
+    for (int i = 0; i < 16 && l * 16 + i < size; ++i)
+      printf("%02x ", recved[l * 16 + i]);
+    printf("\n");
+  }
+  free(iov[0].iov_base);
 }
