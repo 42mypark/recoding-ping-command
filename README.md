@@ -13,6 +13,7 @@
 * [C - bitwitdth](https://www.tutorialspoint.com/cprogramming/c_bit_fields.htm)
 * [icmp programming in C](https://stackoverflow.com/questions/9688899/sending-icmp-packets-in-a-c-program)
 * [ip + icmp header format](https://en.wikipedia.org/wiki/Ping_(networking_utility)#Message_format)
+* [recvmsg()](https://www.ibm.com/docs/en/i/7.2?topic=ssw_ibm_i_72/apis/recvms.html)
 
 ### unresolved question
 

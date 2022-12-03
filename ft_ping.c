@@ -1,228 +1,88 @@
-/* allowed functions
-◦ getpid. (?)
-◦ getuid. (?)
-◦ getaddrinfo.
-◦ freeaddrinfo.
-◦ gettimeofday. (?)
-◦ inet_ntop.
-◦ inet_pton.
-◦ exit.
-◦ signal. (?)
-◦ alarm. (?)
-◦ setsockopt.
-◦ recvmsg.
-◦ sendto.
-◦ socket.
-◦ printf and its family.
-◦ Your libft functions.
-*/
-
-#include <arpa/inet.h>
-#include <netdb.h>
-#include <netinet/in.h>
-#include <netinet/ip.h>
-#include <netinet/ip_icmp.h>
+#include <signal.h>
 #include <stdio.h>
-#include <string.h>
-#include <sys/socket.h>
-// #include <sys/types.h>
-#include <arpa/inet.h>
-#include <netinet/in.h>
 #include <stdlib.h>
+#include <sys/time.h>
 #include <unistd.h>
 
-#define BUFFER_SIZE 84  // 84 why?
+static int interval;
+static int received_count;
+static int loss_count = 33;    // 0
+static int total_count = 100;  // 0
+static double max;
+static double min;
+static double ewma;  // exponential weight moving average
+static double avg;
+static double mdev;
+static struct timeval start_time;
+static struct timeval sent_time;
+// static void* options[256];
+// static struct sockaddr dst_network_ip;
+static char dst_presentation_ip[16] = {'0', '.', '0', '.', '0', '.', '0'};
 
-// void test_getpid() { printf("pid: %d\n", getpid()); }
+void print_result() {
+  int loss_percent = (loss_count * 100 / total_count);
+  int time_ms = (sent_time.tv_sec - start_time.tv_sec) * 1000 +
+                (sent_time.tv_usec - start_time.tv_usec) / 1000;
 
-// void test_getuid() { printf("uid: %d\n", getuid()); }
-
-//  struct addrinfo {
-//          int ai_flags;           /* input flags */
-//          int ai_family;          /* protocol family for socket */
-//          int ai_socktype;        /* socket type */
-//          int ai_protocol;        /* protocol for socket */
-//          socklen_t ai_addrlen;   /* length of socket-address */
-//          struct sockaddr *ai_addr; /* socket-address for socket */
-//          char *ai_canonname;     /* canonical name for service location */
-//          struct addrinfo *ai_next; /* pointer to next in list */
-//  };
-
-// void test_getaddrinfo() {
-//   struct addrinfo* res;
-//   struct addrinfo* rp;
-//   int error = getaddrinfo("www.naver.com", "80", NULL, &res);
-
-//   for (rp = res; rp; rp = rp->ai_next) {
-//     printf("getaddrinfo:\n");
-//     printf("\t ai_flags   : %d\n", rp->ai_flags);
-//     printf("\t ai_family  : %d\n", rp->ai_family);
-//     printf("\t ai_socktype: %d\n", rp->ai_socktype);
-//     printf("\t ai_protocol: %d\n", rp->ai_protocol);
-//     printf("\t ai_addrlen : %d\n", rp->ai_addrlen);
-//     printf("\t ai_addr:\n");
-//     printf("\t\t sa_family: %d\n", rp->ai_addr->sa_family);
-//     printf("\t\t sa_data  : %s\n", rp->ai_addr->sa_data);
-
-//     char ip_toshow[1000] = {0};
-//     struct sockaddr_in* in = (struct sockaddr_in*)rp->ai_addr;
-//     inet_ntop(AF_INET, &in->sin_addr, ip_toshow, 1000);
-//     printf("\t\t IPv4     : %s\n", ip_toshow);
-
-//     printf("\t ai_canonname:%s\n", rp->ai_canonname);
-//     printf("\t ai_next:%p\n", rp->ai_next);
-//   }
-//   freeaddrinfo(res);
-// }
-
-// struct iphdr {
-// #if __BYTE_ORDER == __LITTLE_ENDIAN
-//   unsigned int ihl : 4;
-//   unsigned int version : 4;
-// #elif __BYTE_ORDER == __BIG_ENDIAN
-//   unsigned int version : 4;
-//   unsigned int ihl : 4;
-// #else
-// #error "Please fix <bits/endian.h>"
-// #endif
-//   uint8_t tos;
-//   uint16_t tot_len;
-//   uint16_t id;
-//   uint16_t frag_off;
-//   uint8_t ttl;
-//   uint8_t protocol;
-//   uint16_t check;
-//   uint32_t saddr;
-//   uint32_t daddr;
-//   /*The options start here. */
-// };
-
-// struct icmphdr {
-//   uint8_t type; /* message type */
-//   uint8_t code; /* type sub-code */
-//   uint16_t checksum;
-//   union {
-//     struct {
-//       uint16_t id;
-//       uint16_t sequence;
-//     } echo;           /* echo datagram */
-//     uint32_t gateway; /* gateway address */
-//     struct {
-//       uint16_t __glibc_reserved;
-//       uint16_t mtu;
-//     } frag; /* path mtu discovery */
-//   } un;
-// };
-
-void extract_addr(struct sockaddr* addr) {
-  struct addrinfo* res;
-  // struct addrinfo* rp;
-  int error = getaddrinfo("www.google.com", "80", NULL, &res);
-  if (error) {
-    printf("Error getaddrinfo\n");
-    exit(1);
+  printf("\n--- %s ping statistics ---\n", dst_presentation_ip);
+  printf(
+      "%d packets transmitted, %d received, %d%% packet loss, time "
+      "%dms\n",
+      total_count, received_count, loss_percent, time_ms);
+  if (received_count) {
+    printf("rtt min/avg/max/mdev = %.3f/%.3f/%.3f/%.3f ms\n", min, avg, max,
+           mdev);
   }
-  *addr = *res->ai_addr;
-  freeaddrinfo(res);
 }
 
-unsigned short checksum_2byte(void* buffer, unsigned int byte_size) {
-  unsigned short* buf = buffer;
-  unsigned int count = byte_size / 2;
-  unsigned int sum = 0;
+void exit_program(int sig) {
+  (void)sig;
+  print_result();
+  exit(1);
+}
 
-  for (unsigned int i = 0; i < count; ++i) {
-    sum += buf[i];
-  }
-  sum += (sum & 0xffff0000) >> 16;
+void show_info(int sig) {
+  int loss_percent = (loss_count * 100 / total_count);
 
-  return ~sum;
+  (void)sig;
+  printf(
+      "\b\b%d/%d packets, %d%% loss, min/avg/ewma/max = %.3f/%.3f/%.3f/%.3f "
+      "ms\n",
+      received_count, total_count, loss_percent, min, avg, ewma, max);
+}
+
+void show_help() {
+  printf("\nUsage\n");
+  printf("  ping [options] <destination>\n");
+  printf("\nOptions:\n");
+  printf("  <destination>      dns name or ip address\n");
+  printf("  -h                 print help and exit\n");
+  printf("  -v                 verbose output\n");
+  exit(1);
+}
+
+void send_ping_recv_pong(int sig) {
+  (void)sig;
+
+  // recv_pong();
+  // send_ping();
+  // calc_statistics();
+
+  gettimeofday(&sent_time, NULL);
+  alarm(interval);
 }
 
 int main() {
-  // test_getpid();
-  // test_getuid();
-  // test_getaddrinfo();
+  // parse_file();
+  // parse_argument();
+  interval = 1;
+  gettimeofday(&start_time, NULL);
 
-  struct sockaddr_in src;
-  struct sockaddr_in* dst;
-  struct sockaddr dst_addr;
+  signal(SIGALRM, send_ping_recv_pong);
+  signal(SIGINT, exit_program);
+  signal(SIGQUIT, show_info);
 
-  extract_addr(&dst_addr);
-
-  src.sin_addr.s_addr = inet_addr("10.0.2.15");
-  dst = (struct sockaddr_in*)&dst_addr;
-
-  int on = 1;
-  int fd = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
-  int err = setsockopt(fd, IPPROTO_IP, IP_HDRINCL, &on, sizeof(on));
-
-  if (fd < 0 || err < 0) {
-    printf("Error %d %d\n", fd, err);
-    perror(NULL);
-    exit(1);
-  }
-
-  unsigned char buffer[BUFFER_SIZE] = {0};
-
-  struct iphdr* ip = (struct iphdr*)buffer;
-  struct icmphdr* icmphdr = (struct icmphdr*)(ip + 1);
-  unsigned char* icmpdata = (unsigned char*)(icmphdr + 1);
-
-  ip->ihl = 5;
-  ip->version = 4;
-  ip->tos = 0;  // ?
-  ip->tot_len = sizeof(buffer);
-  ip->id = 0;  // unique per tuple (src, dst, protocol), if (IP_DF) ignorable
-  ip->frag_off = 0;
-  ip->frag_off |= htons(IP_DF);  // why is not working? -> endian
-  ip->ttl = 1;                   // os default 64
-  ip->protocol = IPPROTO_ICMP;
-  ip->saddr = src.sin_addr.s_addr;
-  ip->daddr = dst->sin_addr.s_addr;
-  ip->check = checksum_2byte(buffer, sizeof(struct iphdr));
-
-  printf("%04x\n", ip->check);
-
-  icmphdr->type = 8;
-  icmphdr->code = 0;
-  icmphdr->un.echo.id = 0;             // ? not fixed...
-                                       // the id of icmp echo reply is same.
-  icmphdr->un.echo.sequence = 0x0100;  // (LE) 0x0100 increase
-  strcpy((char*)icmpdata, "hello");    // not allowed func
-  icmphdr->checksum =
-      checksum_2byte(icmphdr, sizeof(buffer) - sizeof(struct iphdr));
-
-  printf("%04x\n", icmphdr->checksum);
-
-  sendto(fd, buffer, BUFFER_SIZE, 0, &dst_addr, sizeof(dst_addr));
-
-  struct msghdr msg;
-  struct iovec iov[1];
-  struct cmsghdr cmsg;
-
-  iov[0].iov_base = malloc(BUFFER_SIZE);
-  memset(iov[0].iov_base, 0, BUFFER_SIZE);
-  iov[0].iov_len = BUFFER_SIZE;
-
-  msg.msg_name = NULL;  // source address
-  msg.msg_namelen = 0;
-  msg.msg_iov = iov;
-  msg.msg_iovlen = 1;
-  msg.msg_control = &cmsg;            // ?
-  msg.msg_controllen = sizeof(cmsg);  // ?
-
-  printf("%ld\n", cmsg.cmsg_len);
-  printf("%d\n", cmsg.cmsg_level);
-  printf("%d\n", cmsg.cmsg_type);
-
-  recvmsg(fd, &msg, MSG_WAITALL);
-  unsigned char* recved = msg.msg_iov->iov_base;
-  int size = msg.msg_iov->iov_len;
-  for (int l = 0; l < size / 16 + 1; ++l) {
-    for (int i = 0; i < 16 && l * 16 + i < size; ++i)
-      printf("%02x ", recved[l * 16 + i]);
-    printf("\n");
-  }
-  free(iov[0].iov_base);
+  alarm(interval);
+  while (1)
+    ;
 }
