@@ -7,8 +7,8 @@
 ◦ inet_ntop.
 ◦ inet_pton.
 ◦ exit.
-◦ signal. (?)
-◦ alarm. (?)
+◦ signal.
+◦ alarm.
 ◦ setsockopt.
 ◦ recvmsg.
 ◦ sendto.
