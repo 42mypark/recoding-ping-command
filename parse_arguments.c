@@ -29,17 +29,17 @@ extern struct global g_;
 //   return 1;
 // }
 
-static void show_options() {  // FOR DEBUG
-  for (int i = 'A'; i <= 'z'; ++i) {
-    if (ft_isalpha(i)) {
-      if (i == 'i')
-        printf("%c %d ", i, ft_atoi(g_.options[i]));
-      else
-        printf("%c %d ", i, (int)(long long)g_.options[i]);
-    }
-  }
-  printf("\n");
-}
+// static void show_options() {  // FOR DEBUG
+//   for (int i = 'A'; i <= 'z'; ++i) {
+//     if (ft_isalpha(i)) {
+//       if (i == 'i')
+//         printf("%c %d ", i, ft_atoi(g_.options[i]));
+//       else
+//         printf("%c %d ", i, (int)(long long)g_.options[i]);
+//     }
+//   }
+//   printf("\n");
+// }
 
 static int arg_mux(char* arg, char* next) {
   int switch_option;

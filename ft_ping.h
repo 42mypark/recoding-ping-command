@@ -3,8 +3,10 @@
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <sys/time.h>
+#define BUFFER_SIZE 84
 
 struct global {
+  int sockfd;
   int interval;
   int received_count;
   int loss_count;
@@ -18,9 +20,10 @@ struct global {
   struct timeval sent_time;
   void* options[128];
   struct sockaddr_in dst_ip;
-  char dst_ip_p[16];
 };
 
+void recv_pong();
+void send_ping();
 void exit_program(int sig);
 void show_info(int sig);
 void show_help();
