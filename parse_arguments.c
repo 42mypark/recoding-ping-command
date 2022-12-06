@@ -10,8 +10,8 @@ extern struct global g_;
 
 // static void show_options() {  // FOR DEBUG
 //   for (int i = 'A'; i <= 'z'; ++i) {
-//     if (ft_isalpha(i)) {
-//       if (i == 'i')
+//     if (ft_isalpha(i) && g_.options[i]) {
+//       if (i == 'i' || i == 'c')
 //         printf("%c %d ", i, ft_atoi(g_.options[i]));
 //       else
 //         printf("%c %d ", i, (int)(long long)g_.options[i]);
@@ -31,7 +31,7 @@ static int arg_mux(char* arg, char* next) {
   }
   for (int i = 1; arg[i]; ++i) {
     switch_option = ft_strchri("hv", arg[i]) != -1;
-    param_option  = ft_strchri("i", arg[i]) != -1;
+    param_option  = ft_strchri("cit", arg[i]) != -1;
     last_option   = arg[i + 1] == '\0';
 
     if (switch_option) {
@@ -51,7 +51,6 @@ static int arg_mux(char* arg, char* next) {
 }
 
 static void check_options() {
-  // show_options();  // FOR DEBUG
   if (g_.options[1]) {
     fprintf(stderr, "ping: invalid option -- '%c'",
             (char)(long long)g_.options[1]);
@@ -60,7 +59,13 @@ static void check_options() {
     show_help();
   }
   if (g_.options[(int)'i'] == NULL) {
-    g_.options[(int)'i'] = (void*)1;
+    g_.options[(int)'i'] = "1";
+  }
+  if (g_.options[(int)'t'] == NULL) {
+    g_.options[(int)'t'] = "64";
+  }
+  if (g_.options[(int)'c'] == NULL) {
+    g_.options[(int)'c'] = "-1";
   }
 }
 
@@ -71,10 +76,6 @@ static void get_dst_ip(char* dst) {
   int                 is_ip;
 
   is_ip = inet_pton(AF_INET, dst, &g_.dst_ip.sin_addr);
-  // if (is_ip) {
-  //   printf("parse_arguments: %s %u\n", dst,
-  //          g_.dst_ip.sin_addr.s_addr);  // FOR DEBUG
-  // }
 
   error = EAI_AGAIN;
   if (!is_ip) {

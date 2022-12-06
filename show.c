@@ -20,8 +20,6 @@ static void show_result() {
     printf("rtt min/avg/max/mdev = %.3f/%.3f/%.3f/%.3f ms\n", g_.min, g_.avg,
            g_.max, g_.mdev);
   }
-
-  printf("%d\n", g_.loss_count);
 }
 
 void exit_program(int sig) {
@@ -34,11 +32,13 @@ void show_info(int sig) {
   int loss_percent = (g_.loss_count * 100 / g_.total_count);
 
   (void)sig;
-  printf(
-      "\b\b%d/%d packets, %d%% loss, min/avg/ewma/max = %.3f/%.3f/%.3f/%.3f "
-      "ms\n",
-      g_.received_count, g_.total_count, loss_percent, g_.min, g_.avg, g_.ewma,
-      g_.max);
+  printf("\b\b%d/%d packets, %d%% loss", g_.received_count, g_.total_count,
+         loss_percent);
+  if (g_.received_count)
+    printf(", min/avg/ewma/max = %.3lf/%.3lf/%.3lf/%.3lf ms\n", g_.min, g_.avg,
+           g_.ewma, g_.max);
+  else
+    printf("\n");
 }
 
 void show_help() {
@@ -46,7 +46,10 @@ void show_help() {
   printf("  ping [options] <destination>\n");
   printf("\nOptions:\n");
   printf("  <destination>      dns name or ip address\n");
+  printf("  -c <count>         stop after <count> replies\n");
   printf("  -h                 print help and exit\n");
+  printf("  -i <interval>      seconds between sending each packet\n");
+  printf("  -t <ttl>           define time to live\n");
   printf("  -v                 verbose output\n");
   exit(1);
 }

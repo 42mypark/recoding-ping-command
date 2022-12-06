@@ -30,11 +30,15 @@
 struct global g_;
 
 static void ping_pong(int sig) {
+  static unsigned long long count = 0;
   (void)sig;
 
   alarm(g_.interval);
   send_ping();
   recv_pong();
+  count++;
+  if (count >= (unsigned long long)ft_atoi(g_.options[(int)'c']))
+    exit_program(0);
 }
 
 void open_socket() {
@@ -51,7 +55,7 @@ int main(int argc, char **argv) {
   parse_arguments(argc, argv);
   open_socket();
 
-  g_.interval = (int)(long long)g_.options[(int)'i'];
+  g_.interval = ft_atoi(g_.options[(int)'i']);
   g_.min      = g_.interval * 1000;
   gettimeofday(&g_.start_time, NULL);
 

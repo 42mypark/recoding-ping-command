@@ -3,16 +3,17 @@
 #include <netinet/ip_icmp.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <time.h>
+// #include <time.h>
 
 #include "ft_ping.h"
 #include "libft.h"
 
 extern struct global g_;
 
-static int random_ttl() {
-  srand(time(NULL));
-  return rand() % 25 + 1;
+static int ttl() {
+  // srand(time(NULL));
+  // return rand() % 25 + 1;
+  return (unsigned int)ft_atoi(g_.options[(int)'t']) % 256;
 }
 
 unsigned short checksum_2byte(void* buffer, unsigned long byte_size) {
@@ -41,7 +42,7 @@ static void set_ip_header(unsigned char* buffer) {
   ip->id = 0;  // unique per tuple (src, dst, protocol), if (IP_DF) ignorable
   ip->frag_off = 0;
   ip->frag_off |= ft_htons(IP_DF);
-  ip->ttl      = random_ttl();  // os default 64, FOR TEST random_ttl() FIXME
+  ip->ttl      = ttl();  // os default 64, FOR TEST random_ttl() FIXME
   ip->protocol = IPPROTO_ICMP;
   ip->saddr    = in.sin_addr.s_addr;
   ip->daddr    = g_.dst_ip.sin_addr.s_addr;
@@ -62,7 +63,7 @@ static void set_icmp_header(unsigned char* buffer) {
       checksum_2byte(icmphdr, BUFFER_SIZE - sizeof(struct iphdr));
 }
 
-void send_ping() {
+void send_ping() {  // ? save info
   int           error;
   unsigned char buffer[BUFFER_SIZE] = {0};
 
@@ -73,5 +74,4 @@ void send_ping() {
   fatal_error_check(error < 0);
   g_.total_count++;
   gettimeofday(&g_.sent_time, NULL);
-  // ? save info
 }
