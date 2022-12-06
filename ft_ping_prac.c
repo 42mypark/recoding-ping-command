@@ -175,8 +175,8 @@ int main() {
   ip->tot_len = sizeof(buffer);
   ip->id = 0;  // unique per tuple (src, dst, protocol), if (IP_DF) ignorable
   ip->frag_off = 0;
-  ip->frag_off |= htons(IP_DF);  // why is not working? -> endian
-  ip->ttl = 1;                   // os default 64
+  ip->frag_off |= ft_htons(IP_DF);  // why is not working? -> endian
+  ip->ttl = 1;                      // os default 64
   ip->protocol = IPPROTO_ICMP;
   ip->saddr = src.sin_addr.s_addr;
   ip->daddr = dst->sin_addr.s_addr;

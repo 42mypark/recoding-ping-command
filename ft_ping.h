@@ -22,6 +22,7 @@ struct global {
   struct sockaddr_in dst_ip;
 };
 
+uint16_t ft_htons(uint16_t host);
 void recv_pong();
 void send_ping();
 void exit_program(int sig);

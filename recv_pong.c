@@ -1,8 +1,74 @@
+#include <errno.h>
+#include <netinet/ip.h>
+#include <arpa/inet.h>
+#include <stdio.h>
+#include <stdlib.h>
+
 #include "ft_ping.h"
+#include "libft.h"
 
 extern struct global g_;
 
+static void set_socket_timeout() {
+  int error;
+  struct timeval timeout;
+
+  timeout.tv_sec = g_.interval;
+  timeout.tv_usec = 0;
+  error = setsockopt(g_.sockfd, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout)); // ?
+  if (error < 0) {
+    fprintf(stderr, "Fatal Error\n");
+    exit(1);
+  }
+}
+
+static void init_msg_iov(struct msghdr* msg, size_t msg_iovlen, struct iovec* iov, unsigned char* buffer) {
+  ft_memset(buffer, 0, BUFFER_SIZE);
+  iov->iov_base = buffer;
+  iov->iov_len = BUFFER_SIZE;
+  msg->msg_iov = iov;
+  msg->msg_iovlen = msg_iovlen;
+}
+
+static float get_interval() {
+  float time;
+  struct timeval curr_time;
+
+  gettimeofday(&curr_time, NULL); // error
+  time = (curr_time.tv_sec - g_.sent_time.tv_sec) * 1000 + (curr_time.tv_usec - g_.sent_time.tv_usec) / 1000;
+  return time;
+}
+
+static void print_message(unsigned char* buffer) {
+  unsigned char type = buffer[sizeof(struct iphdr)];
+  unsigned char code = buffer[sizeof(struct iphdr) + 1];
+  unsigned char icmp_seq = buffer[sizeof(struct iphdr) + 6];
+  unsigned char ttl = buffer[8];
+  int bytes = BUFFER_SIZE - sizeof(struct iphdr);
+  char ip[16] = {0};
+  inet_ntop(AF_INET, buffer + 12, ip, 16);
+
+  if (type != 0 && g_.options[(int)'v']) {
+    printf("%d bytes from %s: type=%d code=%d\n", bytes, ip, (int)type, (int)code);
+    g_.loss_count++;
+  } else if (type == 0) {
+    printf("%d bytes from %s: imcp_seq=%d ttl=%d time=%1.fms\n", bytes, ip, (int)icmp_seq, (int)ttl, get_interval());
+    g_.received_count++;
+  }
+}
+
 void recv_pong() {
-  g_.received_count++;
-  g_.loss_count++;
+  int error;
+  struct msghdr msg = {0};
+  struct iovec iov[1];
+  unsigned char buffer[BUFFER_SIZE];
+
+  init_msg_iov(&msg, 1, iov, buffer);
+  set_socket_timeout();
+  error = recvmsg(g_.sockfd, &msg, MSG_WAITALL);
+  if (error < 0) {
+    g_.loss_count++;
+    return;
+  }
+  print_message(buffer);
 }

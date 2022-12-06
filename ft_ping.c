@@ -13,24 +13,21 @@ struct global g_;
 static void ping_pong(int sig) {
   (void)sig;
 
-  recv_pong();
   send_ping();
-
+  recv_pong();
   // calc_statistics();
-
-  gettimeofday(&g_.sent_time, NULL);  // error
   alarm(g_.interval);
 }
 
 void open_socket() {
   int on;
-  int err;
+  int error;
 
   on = 1;
   g_.sockfd = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
-  err = setsockopt(g_.sockfd, IPPROTO_IP, IP_HDRINCL, &on, sizeof(on));
+  error = setsockopt(g_.sockfd, IPPROTO_IP, IP_HDRINCL, &on, sizeof(on));
 
-  if (g_.sockfd < 0 || err < 0) {
+  if (g_.sockfd < 0 || error < 0) {
     fprintf(stderr, "Fatal Error\n");
     exit(1);
   }
@@ -47,8 +44,8 @@ int main(int argc, char **argv) {
   signal(SIGALRM, ping_pong);  // error
   signal(SIGINT, exit_program);
   signal(SIGQUIT, show_info);
-  alarm(g_.interval);
   ping_pong(0);
+
   while (1)
     ;
 }
