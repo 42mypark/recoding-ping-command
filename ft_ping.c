@@ -1,3 +1,22 @@
+/* allowed functions
+◦ getpid. (-)
+◦ getuid. (?)
+◦ getaddrinfo.
+◦ freeaddrinfo.
+◦ gettimeofday. (?)
+◦ inet_ntop.
+◦ inet_pton. (o)
+◦ exit. (-)
+◦ signal. (x)
+◦ alarm. (-)
+◦ setsockopt. (o)
+◦ recvmsg.
+◦ sendto.
+◦ socket.
+◦ printf and its family.
+◦ Your libft functions.
+*/
+
 #include "ft_ping.h"
 
 #include <signal.h>
@@ -13,10 +32,9 @@ struct global g_;
 static void ping_pong(int sig) {
   (void)sig;
 
+  alarm(g_.interval);
   send_ping();
   recv_pong();
-  // calc_statistics();
-  alarm(g_.interval);
 }
 
 void open_socket() {
@@ -37,8 +55,8 @@ int main(int argc, char **argv) {
   parse_arguments(argc, argv);
   open_socket();
 
-  // for test
-  g_.interval = 1;
+  g_.interval = (int)(long long)g_.options[(int)'i'];
+  g_.min = g_.interval * 1000;
   gettimeofday(&g_.start_time, NULL);  // error
 
   signal(SIGALRM, ping_pong);  // error

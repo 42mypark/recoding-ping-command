@@ -8,27 +8,6 @@
 
 extern struct global g_;
 
-// static int is_ip(char* str) {
-//   char buf[4] = {0};
-//   int index;
-//   int octet;
-//   while (*str) {
-//     if ((*str != '.' && !ft_isdigit(*str)) || index >= 4) {
-//       return 0;
-//     } else if (*str == '.') {
-//       buf[index] = '\0';
-//       octet = ft_atoi(buf);
-//       if (octet > 255) return 0;
-//       index = 0;
-//     } else {
-//       buf[index] = *str;
-//       index++;
-//     }
-//     str++;
-//   }
-//   return 1;
-// }
-
 // static void show_options() {  // FOR DEBUG
 //   for (int i = 'A'; i <= 'z'; ++i) {
 //     if (ft_isalpha(i)) {
@@ -80,6 +59,9 @@ static void check_options() {
   } else if (g_.options[(int)'h']) {
     show_help();
   }
+  if (g_.options[(int)'i'] == NULL) {
+    g_.options[(int)'i'] = (void*)1;
+  }
 }
 
 static void get_dst_ip(char* dst) {
@@ -96,7 +78,7 @@ static void get_dst_ip(char* dst) {
 
   if (!is_ip) {
     error = getaddrinfo(dst, "80", NULL, &res);  // service: 80?
-    if (error) {
+    if (error == EAI_FAIL) {
       fprintf(stderr, "ping: %s: Name of service not know\n", dst);
       exit(1);
     }

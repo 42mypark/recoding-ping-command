@@ -3,7 +3,7 @@
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <sys/time.h>
-#define BUFFER_SIZE 84
+#define BUFFER_SIZE 84  // ?
 
 struct global {
   int sockfd;
@@ -29,5 +29,6 @@ void exit_program(int sig);
 void show_info(int sig);
 void show_help();
 void parse_arguments(int argc, char** argv);
+void calc_statistics(float time);
 
 #endif
