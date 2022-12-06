@@ -41,7 +41,7 @@ static double latency() {
 static void print_message(unsigned char* buffer) {
   unsigned char type     = buffer[sizeof(struct iphdr)];
   unsigned char code     = buffer[sizeof(struct iphdr) + 1];
-  unsigned char icmp_seq = buffer[sizeof(struct iphdr) + 6];  // FIXME
+  unsigned char icmp_seq = buffer[sizeof(struct iphdr) + 7];
   unsigned char ttl      = buffer[8];
   int           bytes    = BUFFER_SIZE - sizeof(struct iphdr);
   char          ip[16]   = {0};
