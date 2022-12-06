@@ -76,12 +76,14 @@ static void get_dst_ip(char* dst) {
   //          g_.dst_ip.sin_addr.s_addr);  // FOR DEBUG
   // }
 
+  error = EAI_AGAIN;
   if (!is_ip) {
-    error = getaddrinfo(dst, "80", NULL, &res);  // service: 80?
-    if (error == EAI_FAIL) {
+    while (error == EAI_AGAIN) error = getaddrinfo(dst, NULL, NULL, &res);
+    if (error == EAI_NONAME) {
       fprintf(stderr, "ping: %s: Name of service not know\n", dst);
       exit(1);
     }
+    fatal_error_check(error);
     in = (struct sockaddr_in*)res->ai_addr;
     g_.dst_ip = *in;
     freeaddrinfo(res);

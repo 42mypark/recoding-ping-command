@@ -1,5 +1,4 @@
 #include <arpa/inet.h>
-#include <errno.h>
 #include <netinet/ip.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -17,10 +16,7 @@ static void set_socket_timeout() {
   timeout.tv_usec = 0;
   error = setsockopt(g_.sockfd, SOL_SOCKET, SO_RCVTIMEO, &timeout,
                      sizeof(timeout));  // ?
-  if (error < 0) {
-    fprintf(stderr, "Fatal Error\n");
-    exit(1);
-  }
+  fatal_error_check(error < 0);
 }
 
 static void init_msg_iov(struct msghdr* msg, size_t msg_iovlen,
@@ -35,8 +31,9 @@ static void init_msg_iov(struct msghdr* msg, size_t msg_iovlen,
 static double latency() {
   double time;
   struct timeval curr_time;
+  int error;
 
-  gettimeofday(&curr_time, NULL);  // error
+  gettimeofday(&curr_time, NULL);
   time = (double)(curr_time.tv_sec - g_.sent_time.tv_sec) * 1000 +
          (double)(curr_time.tv_usec - g_.sent_time.tv_usec) / 1000;
   return time;

@@ -46,7 +46,7 @@ static void set_ip_header(unsigned char* buffer) {
   ip->daddr = g_.dst_ip.sin_addr.s_addr;
   ip->check = checksum_2byte(ip, sizeof(struct iphdr));
 
-  printf("TEST: send ttl: %d\n", ip->ttl);
+  // printf("TEST: send ttl: %d\n", ip->ttl);
 }
 
 static void set_icmp_header(unsigned char* buffer) {
@@ -64,12 +64,14 @@ static void set_icmp_header(unsigned char* buffer) {
 }
 
 void send_ping() {
+  int error;
   unsigned char buffer[BUFFER_SIZE] = {0};
   set_ip_header(buffer);
   set_icmp_header(buffer);
-  sendto(g_.sockfd, buffer, BUFFER_SIZE, 0, (struct sockaddr*)&g_.dst_ip,
-         sizeof(g_.dst_ip));
+  error = sendto(g_.sockfd, buffer, BUFFER_SIZE, 0,
+                 (struct sockaddr*)&g_.dst_ip, sizeof(g_.dst_ip));
+  fatal_error_check(error < 0);
   g_.total_count++;
-  gettimeofday(&g_.sent_time, NULL);  // error
+  gettimeofday(&g_.sent_time, NULL);
   // ? save info
 }

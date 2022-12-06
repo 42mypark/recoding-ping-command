@@ -1,19 +1,19 @@
 /* allowed functions
 ◦ getpid. (-)
 ◦ getuid. (?)
-◦ getaddrinfo.
-◦ freeaddrinfo.
-◦ gettimeofday. (?)
-◦ inet_ntop.
+◦ getaddrinfo. (o)
+◦ freeaddrinfo. (-)
+◦ gettimeofday. (-)
+◦ inet_ntop. (-)
 ◦ inet_pton. (o)
 ◦ exit. (-)
-◦ signal. (x)
+◦ signal. (-)
 ◦ alarm. (-)
 ◦ setsockopt. (o)
 ◦ recvmsg.
-◦ sendto.
-◦ socket.
-◦ printf and its family.
+◦ sendto. (o)
+◦ socket. (o)
+◦ printf and its family. (?)
 ◦ Your libft functions.
 */
 
@@ -44,20 +44,17 @@ void open_socket() {
   on = 1;
   g_.sockfd = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
   error = setsockopt(g_.sockfd, IPPROTO_IP, IP_HDRINCL, &on, sizeof(on));
-
-  if (g_.sockfd < 0 || error < 0) {
-    fprintf(stderr, "Fatal Error\n");
-    exit(1);
-  }
+  fatal_error_check(g_.sockfd < 0 || error < 0);
 }
 
 int main(int argc, char **argv) {
+  int error = 1;
   parse_arguments(argc, argv);
   open_socket();
 
   g_.interval = (int)(long long)g_.options[(int)'i'];
   g_.min = g_.interval * 1000;
-  gettimeofday(&g_.start_time, NULL);  // error
+  gettimeofday(&g_.start_time, NULL);
 
   signal(SIGALRM, ping_pong);  // error
   signal(SIGINT, exit_program);

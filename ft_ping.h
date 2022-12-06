@@ -30,5 +30,6 @@ void show_info(int sig);
 void show_help();
 void parse_arguments(int argc, char** argv);
 void calc_statistics(double time);
+void fatal_error_check(int condition);
 
 #endif
