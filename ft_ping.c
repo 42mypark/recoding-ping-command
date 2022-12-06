@@ -48,7 +48,6 @@ void open_socket() {
 }
 
 int main(int argc, char **argv) {
-  int error = 1;
   parse_arguments(argc, argv);
   open_socket();
 

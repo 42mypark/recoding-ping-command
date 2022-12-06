@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 
 void fatal_error_check(int condition) {
   if (condition) {

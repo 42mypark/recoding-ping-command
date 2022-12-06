@@ -1,5 +1,5 @@
 NAME := ft_ping
-SRCS := ft_ping.c show.c parse_arguments.c recv_pong.c send_ping.c ft_htons.c calc_statistics.c
+SRCS := ft_ping.c show.c parse_arguments.c recv_pong.c send_ping.c ft_htons.c calc_statistics.c fatal_error_check.c
 OBJS := $(SRCS:.c=.o)
 CFLAGS := -Wall -Wextra -Werror -g
 LDFLAGS := -fsanitize=address -g

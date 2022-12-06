@@ -31,7 +31,6 @@ static void init_msg_iov(struct msghdr* msg, size_t msg_iovlen,
 static double latency() {
   double         time;
   struct timeval curr_time;
-  int            error;
 
   gettimeofday(&curr_time, NULL);
   time = (double)(curr_time.tv_sec - g_.sent_time.tv_sec) * 1000 +

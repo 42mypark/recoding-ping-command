@@ -31,6 +31,7 @@ unsigned short checksum_2byte(void* buffer, unsigned long byte_size) {
 static void set_ip_header(unsigned char* buffer) {
   struct iphdr*      ip = (struct iphdr*)buffer;
   struct sockaddr_in in;
+
   inet_pton(AF_INET, "0.0.0.0", &in.sin_addr);  // ?
 
   ip->ihl     = 5;
@@ -39,14 +40,12 @@ static void set_ip_header(unsigned char* buffer) {
   ip->tot_len = BUFFER_SIZE;
   ip->id = 0;  // unique per tuple (src, dst, protocol), if (IP_DF) ignorable
   ip->frag_off = 0;
-  ip->frag_off |= ft_htons(IP_DF);  // why is not working? -> endian
-  ip->ttl      = random_ttl();      // os default FOR TEST random_ttl()
+  ip->frag_off |= ft_htons(IP_DF);
+  ip->ttl      = random_ttl();  // os default 64, FOR TEST random_ttl() FIXME
   ip->protocol = IPPROTO_ICMP;
   ip->saddr    = in.sin_addr.s_addr;
   ip->daddr    = g_.dst_ip.sin_addr.s_addr;
   ip->check    = checksum_2byte(ip, sizeof(struct iphdr));
-
-  // printf("TEST: send ttl: %d\n", ip->ttl);
 }
 
 static void set_icmp_header(unsigned char* buffer) {
@@ -66,6 +65,7 @@ static void set_icmp_header(unsigned char* buffer) {
 void send_ping() {
   int           error;
   unsigned char buffer[BUFFER_SIZE] = {0};
+
   set_ip_header(buffer);
   set_icmp_header(buffer);
   error = sendto(g_.sockfd, buffer, BUFFER_SIZE, 0,
