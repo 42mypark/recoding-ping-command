@@ -31,8 +31,8 @@ static int arg_mux(char* arg, char* next) {
   }
   for (int i = 1; arg[i]; ++i) {
     switch_option = ft_strchri("hv", arg[i]) != -1;
-    param_option = ft_strchri("i", arg[i]) != -1;
-    last_option = arg[i + 1] == '\0';
+    param_option  = ft_strchri("i", arg[i]) != -1;
+    last_option   = arg[i + 1] == '\0';
 
     if (switch_option) {
       g_.options[(int)arg[i]] = (void*)1;
@@ -66,9 +66,9 @@ static void check_options() {
 
 static void get_dst_ip(char* dst) {
   struct sockaddr_in* in;
-  struct addrinfo* res;
-  int error;
-  int is_ip;
+  struct addrinfo*    res;
+  int                 error;
+  int                 is_ip;
 
   is_ip = inet_pton(AF_INET, dst, &g_.dst_ip.sin_addr);
   // if (is_ip) {
@@ -78,20 +78,22 @@ static void get_dst_ip(char* dst) {
 
   error = EAI_AGAIN;
   if (!is_ip) {
-    while (error == EAI_AGAIN) error = getaddrinfo(dst, NULL, NULL, &res);
+    while (error == EAI_AGAIN)
+      error = getaddrinfo(dst, NULL, NULL, &res);
     if (error == EAI_NONAME) {
       fprintf(stderr, "ping: %s: Name of service not know\n", dst);
       exit(1);
     }
     fatal_error_check(error);
-    in = (struct sockaddr_in*)res->ai_addr;
+    in        = (struct sockaddr_in*)res->ai_addr;
     g_.dst_ip = *in;
     freeaddrinfo(res);
   }
 }
 
 void parse_arguments(int argc, char** argv) {
-  for (int i = 1; i < argc; ++i) i += arg_mux(argv[i], argv[i + 1]);
+  for (int i = 1; i < argc; ++i)
+    i += arg_mux(argv[i], argv[i + 1]);
   check_options();
   get_dst_ip(g_.options[0]);
 }

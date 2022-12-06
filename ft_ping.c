@@ -10,7 +10,7 @@
 ◦ signal. (-)
 ◦ alarm. (-)
 ◦ setsockopt. (o)
-◦ recvmsg.
+◦ recvmsg. (o)
 ◦ sendto. (o)
 ◦ socket. (o)
 ◦ printf and its family. (?)
@@ -41,9 +41,9 @@ void open_socket() {
   int on;
   int error;
 
-  on = 1;
+  on        = 1;
   g_.sockfd = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
-  error = setsockopt(g_.sockfd, IPPROTO_IP, IP_HDRINCL, &on, sizeof(on));
+  error     = setsockopt(g_.sockfd, IPPROTO_IP, IP_HDRINCL, &on, sizeof(on));
   fatal_error_check(g_.sockfd < 0 || error < 0);
 }
 
@@ -53,7 +53,7 @@ int main(int argc, char **argv) {
   open_socket();
 
   g_.interval = (int)(long long)g_.options[(int)'i'];
-  g_.min = g_.interval * 1000;
+  g_.min      = g_.interval * 1000;
   gettimeofday(&g_.start_time, NULL);
 
   signal(SIGALRM, ping_pong);  // error

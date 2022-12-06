@@ -8,7 +8,7 @@ extern struct global g_;
 
 static void show_result() {
   int loss_percent = (g_.loss_count * 100 / g_.total_count);
-  int time_ms = (g_.sent_time.tv_sec - g_.start_time.tv_sec) * 1000 +
+  int time_ms      = (g_.sent_time.tv_sec - g_.start_time.tv_sec) * 1000 +
                 (g_.sent_time.tv_usec - g_.start_time.tv_usec) / 1000;
 
   printf("\n--- %s ping statistics ---\n", (char *)g_.options[0]);
