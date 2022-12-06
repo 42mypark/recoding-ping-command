@@ -29,6 +29,6 @@ void exit_program(int sig);
 void show_info(int sig);
 void show_help();
 void parse_arguments(int argc, char** argv);
-void calc_statistics(float time);
+void calc_statistics(double time);
 
 #endif

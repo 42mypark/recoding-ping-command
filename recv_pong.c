@@ -32,13 +32,13 @@ static void init_msg_iov(struct msghdr* msg, size_t msg_iovlen,
   msg->msg_iovlen = msg_iovlen;
 }
 
-static float latency() {
-  float time;
+static double latency() {
+  double time;
   struct timeval curr_time;
 
   gettimeofday(&curr_time, NULL);  // error
-  time = (float)(curr_time.tv_sec - g_.sent_time.tv_sec) * 1000 +
-         (float)(curr_time.tv_usec - g_.sent_time.tv_usec) / 1000;
+  time = (double)(curr_time.tv_sec - g_.sent_time.tv_sec) * 1000 +
+         (double)(curr_time.tv_usec - g_.sent_time.tv_usec) / 1000;
   return time;
 }
 
@@ -49,19 +49,20 @@ static void print_message(unsigned char* buffer) {
   unsigned char ttl = buffer[8];
   int bytes = BUFFER_SIZE - sizeof(struct iphdr);
   char ip[16] = {0};
-  float time = latency();
+  double time = latency();
 
   inet_ntop(AF_INET, buffer + 12, ip, 16);
-  if (type != 0 && g_.options[(int)'v']) {
-    printf("%d bytes from %s: type=%d code=%d\n", bytes, ip, (int)type,
-           (int)code);
-    g_.loss_count++;
-  } else if (type == 0) {
+  if (type == 0) {
     printf("%d bytes from %s: imcp_seq=%d ttl=%d time=%.1f ms\n", bytes, ip,
            (int)icmp_seq, (int)ttl, time);
     calc_statistics(time);
     g_.received_count++;
+    return;
+  } else if (g_.options[(int)'v']) {
+    printf("%d bytes from %s: type=%d code=%d\n", bytes, ip, (int)type,
+           (int)code);
   }
+  g_.loss_count++;
 }
 
 void recv_pong() {

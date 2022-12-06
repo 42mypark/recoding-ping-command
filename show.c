@@ -20,6 +20,8 @@ static void show_result() {
     printf("rtt min/avg/max/mdev = %.3f/%.3f/%.3f/%.3f ms\n", g_.min, g_.avg,
            g_.max, g_.mdev);
   }
+
+  printf("%d\n", g_.loss_count);
 }
 
 void exit_program(int sig) {
