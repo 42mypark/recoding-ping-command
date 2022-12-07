@@ -69,9 +69,10 @@ static void check_options() {
   }
 }
 
-static void get_dst_ip(char* dst) {
+static void get_dst_ip(const char* dst) {
   struct sockaddr_in* in;
   struct addrinfo*    res;
+  struct addrinfo     hints;
   int                 error;
   int                 is_ip;
 
@@ -79,15 +80,24 @@ static void get_dst_ip(char* dst) {
 
   error = EAI_AGAIN;
   if (!is_ip) {
+    ft_memset(&hints, 0, sizeof(hints));
+    hints.ai_family    = AF_UNSPEC; /* Allow IPv4 or IPv6 */
+    hints.ai_socktype  = SOCK_RAW;  /* Datagram socket */
+    hints.ai_protocol  = 0;         /* Any protocol */
+    hints.ai_canonname = NULL;
+    hints.ai_addr      = NULL;
+    hints.ai_next      = NULL;
+    hints.ai_flags = AI_PASSIVE | AI_CANONNAME; /* For wildcard IP address */
     while (error == EAI_AGAIN)
-      error = getaddrinfo(dst, NULL, NULL, &res);
+      error = getaddrinfo(dst, NULL, &hints, &res);
     if (error == EAI_NONAME) {
       fprintf(stderr, "ping: %s: Name of service not know\n", dst);
       exit(1);
     }
-    fatal_error_check(error);
-    in        = (struct sockaddr_in*)res->ai_addr;
-    g_.dst_ip = *in;
+    fatal_error_check(error, "getaddrinfo");
+    in             = (struct sockaddr_in*)res->ai_addr;
+    g_.dst_ip      = *in;
+    g_.domain_name = dst;
     freeaddrinfo(res);
   }
 }
@@ -96,5 +106,6 @@ void parse_arguments(int argc, char** argv) {
   for (int i = 1; i < argc; ++i)
     i += arg_mux(argv[i], argv[i + 1]);
   check_options();
-  get_dst_ip(g_.options[0]);
+  if (g_.options[0])
+    get_dst_ip(g_.options[0]);
 }

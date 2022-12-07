@@ -20,4 +20,5 @@
 
 * [ip: tpye of service](https://en.wikipedia.org/wiki/IPv4#Header)
 * [vector processor](https://en.wikipedia.org/wiki/Vector_processor)
+* without root authority, strace ping [ip address] vs ping [ip address]
 

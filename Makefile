@@ -27,5 +27,7 @@ fclean:
 clean:
 	rm -rf $(OBJS)
 
+re: fclean all
+
 test: test.c
 	$(CC) $(LDFLAGS) -o $@ test.c $(LIBS)

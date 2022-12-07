@@ -8,17 +8,6 @@
 
 extern struct global g_;
 
-static void set_socket_timeout() {
-  int            error;
-  struct timeval timeout;
-
-  timeout.tv_sec  = g_.interval;
-  timeout.tv_usec = 0;
-  error           = setsockopt(g_.sockfd, SOL_SOCKET, SO_RCVTIMEO, &timeout,
-                               sizeof(timeout));  // ?
-  fatal_error_check(error < 0);
-}
-
 static void init_msg_iov(struct msghdr* msg, size_t msg_iovlen,
                          struct iovec* iov, unsigned char* buffer) {
   ft_memset(buffer, 0, BUFFER_SIZE);
@@ -53,12 +42,12 @@ static void print_message(unsigned char* buffer) {
            (int)icmp_seq, (int)ttl, time);
     calc_statistics(time);
     g_.received_count++;
+    g_.loss_count--;
     return;
   } else if (g_.options[(int)'v']) {
     printf("%d bytes from %s: type=%d code=%d\n", bytes, ip, (int)type,
            (int)code);
   }
-  g_.loss_count++;
 }
 
 void recv_pong() {
@@ -68,11 +57,8 @@ void recv_pong() {
   unsigned char buffer[BUFFER_SIZE];
 
   init_msg_iov(&msg, 1, iov, buffer);
-  set_socket_timeout();
   error = recvmsg(g_.sockfd, &msg, MSG_WAITALL);
-  if (error < 0) {
-    g_.loss_count++;
+  if (error < 0)
     return;
-  }
   print_message(buffer);
 }

@@ -37,7 +37,7 @@ static void set_ip_header(unsigned char* buffer) {
 
   ip->ihl     = 5;
   ip->version = 4;
-  ip->tos     = 0;  // ?
+  ip->tos     = 0;
   ip->tot_len = BUFFER_SIZE;
   ip->id = 0;  // unique per tuple (src, dst, protocol), if (IP_DF) ignorable
   ip->frag_off = 0;
@@ -55,7 +55,7 @@ static void set_icmp_header(unsigned char* buffer) {
 
   icmphdr->type             = 8;
   icmphdr->code             = 0;
-  icmphdr->un.echo.id       = getpid();  // the id of icmp echo reply is same.
+  icmphdr->un.echo.id       = getpid();  // the id of ipcmp echo reply is same.
   icmphdr->un.echo.sequence = ft_htons(g_.total_count);
   ft_strlcpy((char*)icmpdata, "hello",
              BUFFER_SIZE - sizeof(struct iphdr) - sizeof(struct icmphdr));
@@ -71,7 +71,8 @@ void send_ping() {  // ? save info
   set_icmp_header(buffer);
   error = sendto(g_.sockfd, buffer, BUFFER_SIZE, 0,
                  (struct sockaddr*)&g_.dst_ip, sizeof(g_.dst_ip));
-  fatal_error_check(error < 0);
+  fatal_error_check(error < 0, "sendto");
   g_.total_count++;
+  g_.loss_count++;
   gettimeofday(&g_.sent_time, NULL);
 }
