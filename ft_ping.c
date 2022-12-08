@@ -54,7 +54,7 @@ void open_socket() {
   fatal_error_check(g_.sockfd < 0, "socket");
 
   on    = 1;
-  error = setsockopt(g_.sockfd, IPPROTO_IP, IP_HDRINCL, &on, sizeof(on));  // ?
+  error = setsockopt(g_.sockfd, IPPROTO_IP, IP_HDRINCL, &on, sizeof(on));
   fatal_error_check(error < 0, "setsockopt");
 
   filter.data =

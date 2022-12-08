@@ -42,7 +42,7 @@ static void set_ip_header(unsigned char* buffer) {
   ip->id = 0;  // unique per tuple (src, dst, protocol), if (IP_DF) ignorable
   ip->frag_off = 0;
   ip->frag_off |= ft_htons(IP_DF);
-  ip->ttl      = ttl();  // os default 64, FOR TEST random_ttl() FIXME
+  ip->ttl      = ttl();  // os default 64
   ip->protocol = IPPROTO_ICMP;
   ip->saddr    = in.sin_addr.s_addr;
   ip->daddr    = g_.dst_ip.sin_addr.s_addr;

@@ -5,9 +5,6 @@
 
 #include "ft_ping.h"
 #include "libft.h"
-
-// TODO check id!
-
 extern struct global g_;
 
 // static void show_options() {  // FOR DEBUG
@@ -120,7 +117,7 @@ static void check_option_argument_i(long long number) {
 }
 
 static void check_option_argument_t(long long number) {
-  if (number < 0) {
+  if (number < 0 || number > 255) {
     fprintf(stderr,
             "ping: invalid argument: '%s': out of range: 0 <= value <= 255\n",
             (char*)g_.options[(int)'t']);
