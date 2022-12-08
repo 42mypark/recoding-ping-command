@@ -45,10 +45,10 @@ static void ping(int sig) {
 }
 
 void open_socket() {
-  int error;
-  int on;
-  // struct icmp_filter filter;
-  struct timeval timeout;
+  int                error;
+  int                on;
+  struct icmp_filter filter;
+  struct timeval     timeout;
 
   g_.sockfd = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
   fatal_error_check(g_.sockfd < 0, "socket");
@@ -57,12 +57,12 @@ void open_socket() {
   error = setsockopt(g_.sockfd, IPPROTO_IP, IP_HDRINCL, &on, sizeof(on));  // ?
   fatal_error_check(error < 0, "setsockopt");
 
-  // filter.data =
-  //     ~(1 << ICMP_ECHOREPLY | 1 << ICMP_DEST_UNREACH | 1 << ICMP_REDIRECT |
-  //       1 << ICMP_TIME_EXCEEDED | 1 << ICMP_PARAMETERPROB);
-  // error = setsockopt(g_.sockfd, SOL_RAW, ICMP_FILTER, (char *)&filter,
-  //                    sizeof(filter));
-  // fatal_error_check(error < 0, "setsockopt");
+  filter.data =
+      ~(1 << ICMP_ECHOREPLY | 1 << ICMP_DEST_UNREACH | 1 << ICMP_REDIRECT |
+        1 << ICMP_TIME_EXCEEDED | 1 << ICMP_PARAMETERPROB);
+  error = setsockopt(g_.sockfd, SOL_RAW, ICMP_FILTER, (char *)&filter,
+                     sizeof(filter));
+  fatal_error_check(error < 0, "setsockopt");
 
   timeout.tv_sec  = g_.interval;
   timeout.tv_usec = 0;
