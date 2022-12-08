@@ -24,7 +24,7 @@ struct global {
 };
 
 uint16_t ft_htons(uint16_t host);
-void     recv_pong();
+void     recv_ping();
 void     send_ping();
 void     exit_program(int sig);
 void     show_info(int sig);

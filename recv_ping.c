@@ -38,8 +38,12 @@ static void print_message(unsigned char* buffer) {
 
   inet_ntop(AF_INET, buffer + 12, ip, 16);
   if (type == 0) {
-    printf("%d bytes from %s: imcp_seq=%d ttl=%d time=%.1f ms\n", bytes, ip,
-           (int)icmp_seq, (int)ttl, time);
+    if (g_.domain_name)
+      printf("%d bytes from %s (%s): imcp_seq=%d ttl=%d time=%.1f ms\n", bytes,
+             g_.domain_name, ip, (int)icmp_seq, (int)ttl, time);
+    else
+      printf("%d bytes from %s: imcp_seq=%d ttl=%d time=%.1f ms\n", bytes, ip,
+             (int)icmp_seq, (int)ttl, time);
     calc_statistics(time);
     g_.received_count++;
     g_.loss_count--;
@@ -50,7 +54,7 @@ static void print_message(unsigned char* buffer) {
   }
 }
 
-void recv_pong() {
+void recv_ping() {
   int           error;
   struct msghdr msg = {0};
   struct iovec  iov[1];

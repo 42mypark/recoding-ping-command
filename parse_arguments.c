@@ -6,15 +6,17 @@
 #include "ft_ping.h"
 #include "libft.h"
 
+// TODO check id!
+
 extern struct global g_;
 
 // static void show_options() {  // FOR DEBUG
 //   for (int i = 'A'; i <= 'z'; ++i) {
 //     if (ft_isalpha(i) && g_.options[i]) {
 //       if (i == 'i' || i == 'c')
-//         printf("%c %d ", i, ft_atoi(g_.options[i]));
+//         printf("%c %x ", i, ft_atoi(g_.options[i]));
 //       else
-//         printf("%c %d ", i, (int)(long long)g_.options[i]);
+//         printf("%c %x ", i, (int)(long long)g_.options[i]);
 //     }
 //   }
 //   printf("\n");
@@ -40,7 +42,7 @@ static int arg_mux(char* arg, char* next) {
       g_.options[(int)arg[i]] = arg + i + 1;
       return 0;
     } else if (param_option && last_option) {
-      g_.options[(int)arg[i]] = next;
+      g_.options[(int)arg[i]] = next ? next : (void*)-1;
       return 1;
     } else {
       g_.options[1] = (void*)(long long)arg[i];
@@ -50,7 +52,46 @@ static int arg_mux(char* arg, char* next) {
   return 0;
 }
 
-static void check_options() {
+static long long number_conversion(char* s, int* error) {
+  unsigned long long size;
+  unsigned long long prev;
+  long long          sign = 1;
+
+  if (*s == '-') {
+    sign = -1;
+    s++;
+  }
+
+  size = 0;
+  while (*s) {
+    if (!ft_isdigit(*s)) {
+      *error = -1;
+      return 0;
+    }
+    prev = size;
+    size = size * 10 + *s - '0';
+    if (prev > (unsigned long long)(__LONG_MAX__ - (*s - '0')) / 10) {
+      *error = -2;
+      return 0;
+    }
+    s++;
+  }
+  return (long long)size * sign;
+}
+
+static void number_validation(char* arg, int error) {
+  if (error == -1) {
+    fprintf(stderr, "ping: invalid argument: '%s'\n", arg);
+    exit(1);
+  } else if (error == -2) {
+    fprintf(stderr,
+            "ping: invalid argument: '%s': Numerical result out of range\n",
+            arg);
+    exit(1);
+  }
+}
+
+static void check_invalid_option() {
   if (g_.options[1]) {
     fprintf(stderr, "ping: invalid option -- '%c'",
             (char)(long long)g_.options[1]);
@@ -58,15 +99,65 @@ static void check_options() {
   } else if (g_.options[(int)'h']) {
     show_help();
   }
-  if (g_.options[(int)'i'] == NULL) {
-    g_.options[(int)'i'] = "1";
+}
+
+static void check_option_argument_c(long long number) {
+  if (number < 1) {
+    fprintf(stderr,
+            "ping: invalid argument: '%s': out of range: 1 <= value <= "
+            "9223372036854775807\n",
+            (char*)g_.options[(int)'c']);
+    exit(1);
   }
-  if (g_.options[(int)'t'] == NULL) {
-    g_.options[(int)'t'] = "64";
+}
+
+static void check_option_argument_i(long long number) {
+  if (number < 1 && getuid() != 0) {
+    fprintf(stderr,
+            "ping: cannot flood; minimal interval allowed for user is 200ms\n");
+    exit(1);
   }
-  if (g_.options[(int)'c'] == NULL) {
-    g_.options[(int)'c'] = "-1";
+}
+
+static void check_option_argument_t(long long number) {
+  if (number < 0) {
+    fprintf(stderr,
+            "ping: invalid argument: '%s': out of range: 0 <= value <= 255\n",
+            (char*)g_.options[(int)'t']);
+    exit(1);
+  } else if (number == 0) {
+    fprintf(stderr,
+            "ping: cannot set unicast time-to-live: Invalid argument\n");
+    exit(1);
   }
+}
+
+static void check_option_arguments() {
+  int       error;
+  long long number;
+  char      s[]                        = "cit";
+  void (*check_argument[3])(long long) = {
+      check_option_argument_c,
+      check_option_argument_i,
+      check_option_argument_t,
+  };
+
+  for (int i = 0; s[i]; ++i) {
+    if (g_.options[(int)s[i]] == (void*)-1) {
+      fprintf(stderr, "ping: option requires an argument -- '%c'", s[i]);
+      show_help();
+    }
+    number = number_conversion(g_.options[(int)s[i]], &error);
+    check_argument[i](number);
+    number_validation(g_.options[(int)s[i]], error);
+    g_.options[(int)s[i]] = (void*)number;
+  }
+}
+
+static void check_options() {
+  // show_options();
+  check_invalid_option();
+  check_option_arguments();
 }
 
 static void get_dst_ip(const char* dst) {
@@ -103,9 +194,19 @@ static void get_dst_ip(const char* dst) {
 }
 
 void parse_arguments(int argc, char** argv) {
+  g_.options[(int)'i'] = "1";
+  g_.options[(int)'t'] = "64";
+  g_.options[(int)'c'] = "9223372036854775807";
+
   for (int i = 1; i < argc; ++i)
     i += arg_mux(argv[i], argv[i + 1]);
+
   check_options();
+
   if (g_.options[0])
     get_dst_ip(g_.options[0]);
+  else {
+    fprintf(stderr, "ping: usage error: Destination address required\n");
+    exit(1);
+  }
 }

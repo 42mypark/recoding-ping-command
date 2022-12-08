@@ -29,15 +29,15 @@
 
 struct global g_;
 
-static void ping_pong(int sig) {
-  static unsigned long long count = 0;
+static void ping(int sig) {
+  static long long count = 0;
   (void)sig;
 
   alarm(g_.interval);
   send_ping();
-  recv_pong();
+  recv_ping();
   count++;
-  if (count >= (unsigned long long)ft_atoi(g_.options[(int)'c']))
+  if (count >= (long long)(g_.options[(int)'c']))
     exit_program(0);
 }
 
@@ -65,20 +65,18 @@ void open_socket() {
 int main(int argc, char **argv) {
   parse_arguments(argc, argv);
   if (g_.options[0] == NULL) {
-    fprintf(stderr, "ping: usage error: Destination address required\n");
-    exit(1);
   }
 
-  g_.interval = ft_atoi(g_.options[(int)'i']);
+  g_.interval = (int)(long long)g_.options[(int)'i'];
   g_.min      = g_.interval * 1000;
   gettimeofday(&g_.start_time, NULL);
 
   open_socket();
 
-  signal(SIGALRM, ping_pong);
+  signal(SIGALRM, ping);
   signal(SIGINT, exit_program);
   signal(SIGQUIT, show_info);
-  ping_pong(0);
+  ping(0);
 
   while (1)
     ;

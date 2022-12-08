@@ -42,14 +42,14 @@ void show_info(int sig) {
 }
 
 void show_help() {
-  printf("\nUsage\n");
-  printf("  ping [options] <destination>\n");
-  printf("\nOptions:\n");
-  printf("  <destination>      dns name or ip address\n");
-  printf("  -c <count>         stop after <count> replies\n");
-  printf("  -h                 print help and exit\n");
-  printf("  -i <interval>      seconds between sending each packet\n");
-  printf("  -t <ttl>           define time to live\n");
-  printf("  -v                 verbose output\n");
+  fprintf(stderr, "\nUsage\n");
+  fprintf(stderr, "  ping [options] <destination>\n");
+  fprintf(stderr, "\nOptions:\n");
+  fprintf(stderr, "  <destination>      dns name or ip address\n");
+  fprintf(stderr, "  -c <count>         stop after <count> replies\n");
+  fprintf(stderr, "  -h                 print help and exit\n");
+  fprintf(stderr, "  -i <interval>      seconds between sending each packet\n");
+  fprintf(stderr, "  -t <ttl>           define time to live\n");
+  fprintf(stderr, "  -v                 verbose output\n");
   exit(1);
 }

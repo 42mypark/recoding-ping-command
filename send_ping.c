@@ -13,7 +13,7 @@ extern struct global g_;
 static int ttl() {
   // srand(time(NULL));
   // return rand() % 25 + 1;
-  return (unsigned int)ft_atoi(g_.options[(int)'t']) % 256;
+  return (long long)(g_.options[(int)'t']) % 256;
 }
 
 unsigned short checksum_2byte(void* buffer, unsigned long byte_size) {
