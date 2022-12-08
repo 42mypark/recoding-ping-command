@@ -63,7 +63,7 @@ static void set_icmp_header(unsigned char* buffer) {
       checksum_2byte(icmphdr, BUFFER_SIZE - sizeof(struct iphdr));
 }
 
-void send_ping() {  // ? save info
+void send_ping() {
   int           error;
   unsigned char buffer[BUFFER_SIZE] = {0};
 
