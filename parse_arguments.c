@@ -172,9 +172,9 @@ static void get_dst_ip(const char* dst) {
   error = EAI_AGAIN;
   if (!is_ip) {
     ft_memset(&hints, 0, sizeof(hints));
-    hints.ai_family    = AF_UNSPEC; /* Allow IPv4 or IPv6 */
-    hints.ai_socktype  = SOCK_RAW;  /* Datagram socket */
-    hints.ai_protocol  = 0;         /* Any protocol */
+    hints.ai_family    = AF_INET;
+    hints.ai_socktype  = SOCK_RAW;
+    hints.ai_protocol  = 0; /* Any protocol */
     hints.ai_canonname = NULL;
     hints.ai_addr      = NULL;
     hints.ai_next      = NULL;
