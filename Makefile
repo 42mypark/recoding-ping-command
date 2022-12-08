@@ -3,15 +3,16 @@ SRCS := ft_ping.c show.c parse_arguments.c recv_ping.c send_ping.c ft_htons.c ca
 OBJS := $(SRCS:.c=.o)
 CFLAGS := -Wall -Wextra -Werror -g
 LDFLAGS := -fsanitize=address -g
-LIBFT := ft
+LIBFT := libft.a
+LIBFT_NAME := ft
 LIBFT_DIR := ./libft
 INCS := -I $(LIBFT_DIR)
-LIBS := -L$(LIBFT_DIR) -l$(LIBFT)
+LIBS := -L$(LIBFT_DIR) -l$(LIBFT_NAME)
 
 all: $(NAME)
 
-$(NAME): $(OBJS) $(LIBFT) 
-	$(CC) $(LDFLAGS) -o $@ $(filter-out $(lastword $^), $^) $(LIBS)
+$(NAME): $(LIBFT_DIR)/$(LIBFT) $(OBJS)  
+	$(CC) $(LDFLAGS) -o $@ $(filter-out $(firstword $^), $^) $(LIBS)
 
 %.o:%.c
 	$(CC) $(CFLAGS) -c -o $@ $< $(INCS)
@@ -28,6 +29,3 @@ clean:
 	rm -rf $(OBJS)
 
 re: fclean all
-
-test: test.c
-	$(CC) $(LDFLAGS) -o $@ test.c $(LIBS)
