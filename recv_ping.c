@@ -37,11 +37,8 @@ static void print_message(unsigned char* buffer) {
   char           ip[16] = {0};
   double         time   = latency();
 
-  if (id != getpid())
-    return;
-
   inet_ntop(AF_INET, buffer + 12, ip, 16);
-  if (type == 0) {
+  if (type == 0 && id == getpid()) {
     if (g_.domain_name)
       printf("%d bytes from %s (%s): imcp_seq=%d ttl=%d time=%.1f ms\n", bytes,
              g_.domain_name, ip, (int)icmp_seq, (int)ttl, time);
