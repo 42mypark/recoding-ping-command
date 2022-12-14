@@ -76,6 +76,7 @@ void open_socket() {
 int main(int argc, char **argv) {
   char        ip[16] = {0};
   const char *domain_name;
+  int         error;
   parse_arguments(argc, argv);
 
   g_.interval = (int)(long long)g_.options[(int)'i'];
@@ -90,8 +91,9 @@ int main(int argc, char **argv) {
 
   inet_ntop(AF_INET, &g_.dst_ip.sin_addr, ip, sizeof(ip));
   domain_name = g_.domain_name ? g_.domain_name : ip;
-  printf("PING %s (%s) %x(%d) bytes of data.\n", domain_name, ip, BUFFER_SIZE,
-         BUFFER_SIZE);
+  error       = printf("PING %s (%s) %x(%d) bytes of data.\n", domain_name, ip,
+                       BUFFER_SIZE, BUFFER_SIZE);
+  fatal_error_check(error < 0, "printf");
   ping(0);
 
   while (1)

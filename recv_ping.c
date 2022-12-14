@@ -36,23 +36,25 @@ static void print_message(unsigned char* buffer) {
   int            bytes  = BUFFER_SIZE - sizeof(struct iphdr);
   char           ip[16] = {0};
   double         time   = latency();
+  int            error;
 
   inet_ntop(AF_INET, buffer + 12, ip, 16);
   if (type == 0 && id == getpid()) {
     if (g_.domain_name)
-      printf("%d bytes from %s (%s): imcp_seq=%d ttl=%d time=%.1f ms\n", bytes,
-             g_.domain_name, ip, (int)icmp_seq, (int)ttl, time);
+      error = printf("%d bytes from %s (%s): imcp_seq=%d ttl=%d time=%.1f ms\n",
+                     bytes, g_.domain_name, ip, (int)icmp_seq, (int)ttl, time);
     else
-      printf("%d bytes from %s: imcp_seq=%d ttl=%d time=%.1f ms\n", bytes, ip,
-             (int)icmp_seq, (int)ttl, time);
+      error = printf("%d bytes from %s: imcp_seq=%d ttl=%d time=%.1f ms\n",
+                     bytes, ip, (int)icmp_seq, (int)ttl, time);
     calc_statistics(time);
     g_.received_count++;
     g_.loss_count--;
-    return;
-  } else if (g_.options[(int)'v']) {
-    printf("%d bytes from %s: type=%d code=%d\n", bytes, ip, (int)type,
-           (int)code);
+  } else {
+    error = printf("%d bytes from %s: type=%d code=%d\n", bytes, ip, (int)type,
+                   (int)code);
+    g_.error_count++;
   }
+  fatal_error_check(error < 0, "printf");
 }
 
 void recv_ping() {

@@ -11,6 +11,7 @@ struct global {
   int                received_count;
   int                loss_count;
   int                total_count;
+  int                error_count;
   double             max;
   double             min;
   double             ewma;  // exponential weight moving average
