@@ -1,5 +1,14 @@
 # ft_ping
 
+### note
+* [Datagram](https://github.com/42mypark/recoding-ping-command/wiki/Datagram)
+* [Raw Socket](https://github.com/42mypark/recoding-ping-command/wiki/Raw-Socket)
+* [IPv4](https://github.com/42mypark/recoding-ping-command/wiki/IPv4)
+* [icmp](https://github.com/42mypark/recoding-ping-command/wiki/icmp-(internet-control-message-protocol))
+* [strace 와 ping](https://github.com/42mypark/recoding-ping-command/wiki/strace%EC%99%80-ping)
+* [capability (linux)](https://github.com/42mypark/recoding-ping-command/wiki/capability-(linux))
+* [recvmsg](https://github.com/42mypark/recoding-ping-command/wiki/recvmsg)
+
 ### reference
 
 * [ip - rfc6864](https://www.rfc-editor.org/rfc/rfc6864)
@@ -18,7 +27,5 @@
 
 ### unresolved question
 
-* [ip: tpye of service](https://en.wikipedia.org/wiki/IPv4#Header)
 * [vector processor](https://en.wikipedia.org/wiki/Vector_processor)
-* without root authority, strace ping [ip address] vs ping [ip address]
 
