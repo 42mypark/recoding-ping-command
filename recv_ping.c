@@ -55,7 +55,6 @@ static void echo_reply(const unsigned char* buffer, const char* ip) {
   else
     error = printf("%d bytes from %s: imcp_seq=%d ttl=%d time=%.1f ms\n", bytes,
                    ip, (int)seq, (int)ttl, time);
-
   fatal_error_check(error < 0, "printf");
   calc_statistics(time);
 }
@@ -68,6 +67,7 @@ static void packet_error(const unsigned char* buffer, const char* ip) {
   int           error;
 
   error = printf("%d bytes from %s: ", bytes, ip);
+  fatal_error_check(error < 0, "printf");
   switch (type) {
     case DESTINATION_UNREACHABLE:
       error = printf("Destination Unreachable");
@@ -78,6 +78,7 @@ static void packet_error(const unsigned char* buffer, const char* ip) {
     default:
       break;
   }
+  fatal_error_check(error < 0, "printf");
   if (g_.options[(int)'v'])
     error = printf(" type=%d code=%d\n", (int)type, (int)code);
   else
