@@ -59,7 +59,7 @@ static void echo_reply(const unsigned char* buffer, const char* ip) {
   calc_statistics(time);
 }
 
-static void packet_error(const unsigned char* buffer, const char* ip) {
+static void icmp_error(const unsigned char* buffer, const char* ip) {
   const int     iphdr = sizeof(struct iphdr);
   unsigned char type  = buffer[iphdr];
   unsigned char code  = buffer[iphdr + 1];
@@ -86,13 +86,14 @@ static void packet_error(const unsigned char* buffer, const char* ip) {
   fatal_error_check(error < 0, "printf");
 }
 
-static void packet_return(unsigned char* buffer) {
-  unsigned short id     = get_id(buffer);
-  unsigned char  type   = buffer[sizeof(struct iphdr)];
-  char           ip[16] = {0};
+static int packet_return(unsigned char* buffer) {
+  unsigned short id            = get_id(buffer);
+  unsigned char  type          = buffer[sizeof(struct iphdr)];
+  char           ip[16]        = {0};
+  int            not_my_packet = id != getpid();
 
-  if (id != getpid())
-    return;
+  if (not_my_packet)
+    return 1;
 
   inet_ntop(AF_INET, buffer + 12, ip, 16);
   if (type == 0) {
@@ -100,20 +101,24 @@ static void packet_return(unsigned char* buffer) {
     g_.received_count++;
     g_.loss_count--;
   } else {
-    packet_error(buffer, ip);
+    icmp_error(buffer, ip);
     g_.error_count++;
   }
+  return 0;
 }
 
 void recv_ping() {
   int           error;
-  struct msghdr msg = {0};
+  int           retry = 1;
+  struct msghdr msg   = {0};
   struct iovec  iov[1];
   unsigned char buffer[BUFFER_SIZE];
 
   init_msg_iov(&msg, 1, iov, buffer);
-  error = recvmsg(g_.sockfd, &msg, MSG_WAITALL);
-  if (error < 0)
-    return;
-  packet_return(buffer);
+  while (retry) {
+    error = recvmsg(g_.sockfd, &msg, MSG_WAITALL);
+    if (error < 0)
+      return;
+    retry = packet_return(buffer);
+  }
 }

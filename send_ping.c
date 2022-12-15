@@ -33,7 +33,7 @@ static void set_ip_header(unsigned char* buffer) {
   struct iphdr*      ip = (struct iphdr*)buffer;
   struct sockaddr_in in;
 
-  inet_pton(AF_INET, "0.0.0.0", &in.sin_addr);  // ?
+  inet_pton(AF_INET, "0.0.0.0", &in.sin_addr);
 
   ip->ihl     = 5;
   ip->version = 4;

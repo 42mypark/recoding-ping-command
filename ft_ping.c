@@ -45,7 +45,7 @@ static void ping(int sig) {
 }
 
 void open_socket() {
-  int                error;
+  int                e;
   int                on;
   struct icmp_filter filter;
   struct timeval     timeout;
@@ -53,24 +53,22 @@ void open_socket() {
   g_.sockfd = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
   fatal_error_check(g_.sockfd < 0, "socket");
 
-  on    = 1;
-  error = setsockopt(g_.sockfd, IPPROTO_IP, IP_HDRINCL, &on, sizeof(on));
-  fatal_error_check(error < 0, "setsockopt");
+  on = 1;
+  e  = setsockopt(g_.sockfd, IPPROTO_IP, IP_HDRINCL, &on, sizeof(on));
+  fatal_error_check(e < 0, "setsockopt");
 
   filter.data =
       ~(1 << ICMP_ECHOREPLY | 1 << ICMP_DEST_UNREACH | 1 << ICMP_REDIRECT |
         1 << ICMP_TIME_EXCEEDED | 1 << ICMP_PARAMETERPROB);
-  error = setsockopt(g_.sockfd, SOL_RAW, ICMP_FILTER, (char *)&filter,
-                     sizeof(filter));
-  fatal_error_check(error < 0, "setsockopt");
+  e = setsockopt(g_.sockfd, SOL_RAW, ICMP_FILTER, (char *)&filter,
+                 sizeof(filter));
+  fatal_error_check(e < 0, "setsockopt");
 
   timeout.tv_sec  = g_.interval;
   timeout.tv_usec = 0;
-  error =
-      setsockopt(g_.sockfd, SOL_SOCKET, SO_SNDTIMEO, &timeout, sizeof(timeout));
-  error =
-      setsockopt(g_.sockfd, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
-  fatal_error_check(error < 0, "setsockopt");
+  e = setsockopt(g_.sockfd, SOL_SOCKET, SO_SNDTIMEO, &timeout, sizeof(timeout));
+  e = setsockopt(g_.sockfd, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
+  fatal_error_check(e < 0, "setsockopt");
 }
 
 int main(int argc, char **argv) {
