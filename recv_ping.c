@@ -1,4 +1,5 @@
 #include <arpa/inet.h>
+#include <errno.h>
 #include <netinet/ip.h>
 #include <netinet/ip_icmp.h>
 #include <stdio.h>
@@ -41,9 +42,8 @@ static unsigned short get_id(unsigned char* buffer) {
   return id;
 }
 
-static void echo_reply(const unsigned char* buffer, const char* ip) {
+static void echo_reply(unsigned char* buffer, char* ip, double time) {
   const int     iphdr = sizeof(struct iphdr);
-  double        time  = latency();
   unsigned char seq   = buffer[iphdr + 7];
   unsigned char ttl   = buffer[8];
   int           bytes = BUFFER_SIZE - iphdr;
@@ -59,7 +59,7 @@ static void echo_reply(const unsigned char* buffer, const char* ip) {
   calc_statistics(time);
 }
 
-static void icmp_error(const unsigned char* buffer, const char* ip) {
+static void icmp_error(unsigned char* buffer, char* ip) {
   const int     iphdr = sizeof(struct iphdr);
   unsigned char type  = buffer[iphdr];
   unsigned char code  = buffer[iphdr + 1];
@@ -90,14 +90,17 @@ static int packet_return(unsigned char* buffer) {
   unsigned short id            = get_id(buffer);
   unsigned char  type          = buffer[sizeof(struct iphdr)];
   char           ip[16]        = {0};
-  int            not_my_packet = id != getpid();
+  int            not_my_packet = id != (unsigned short)getpid();
+  double         time          = latency();
 
+  if (time > (double)g_.interval * 1000)
+    return 0;
   if (not_my_packet)
     return 1;
 
   inet_ntop(AF_INET, buffer + 12, ip, 16);
   if (type == 0) {
-    echo_reply(buffer, ip);
+    echo_reply(buffer, ip, time);
     g_.received_count++;
     g_.loss_count--;
   } else {
@@ -117,8 +120,8 @@ void recv_ping() {
   init_msg_iov(&msg, 1, iov, buffer);
   while (retry) {
     error = recvmsg(g_.sockfd, &msg, MSG_WAITALL);
-    if (error < 0)
-      return;
+    if (error < 0 && errno == EAGAIN)
+      break;
     retry = packet_return(buffer);
   }
 }
