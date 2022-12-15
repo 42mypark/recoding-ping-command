@@ -1,5 +1,6 @@
 #include <arpa/inet.h>
 #include <netinet/ip.h>
+#include <netinet/ip_icmp.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -27,34 +28,80 @@ static double latency() {
   return time;
 }
 
-static void print_message(unsigned char* buffer) {
-  unsigned char  type     = buffer[sizeof(struct iphdr)];
-  unsigned char  code     = buffer[sizeof(struct iphdr) + 1];
-  unsigned char  icmp_seq = buffer[sizeof(struct iphdr) + 7];
-  unsigned char  ttl      = buffer[8];
-  unsigned short id     = *(unsigned short*)(buffer + sizeof(struct iphdr) + 4);
-  int            bytes  = BUFFER_SIZE - sizeof(struct iphdr);
+static unsigned short get_id(unsigned char* buffer) {
+  const int      iphdr   = sizeof(struct iphdr);
+  const int      icmphdr = sizeof(struct icmphdr);
+  unsigned char  type    = buffer[iphdr];
+  unsigned short id;
+
+  if (type == 0)
+    id = *(unsigned short*)(buffer + iphdr + 4);
+  else
+    id = *(unsigned short*)(buffer + iphdr * 2 + icmphdr + 4);
+  return id;
+}
+
+static void echo_reply(const unsigned char* buffer, const char* ip) {
+  const int     iphdr = sizeof(struct iphdr);
+  double        time  = latency();
+  unsigned char seq   = buffer[iphdr + 7];
+  unsigned char ttl   = buffer[8];
+  int           bytes = BUFFER_SIZE - iphdr;
+  int           error;
+
+  if (g_.domain_name)
+    error = printf("%d bytes from %s (%s): imcp_seq=%d ttl=%d time=%.1f ms\n",
+                   bytes, g_.domain_name, ip, (int)seq, (int)ttl, time);
+  else
+    error = printf("%d bytes from %s: imcp_seq=%d ttl=%d time=%.1f ms\n", bytes,
+                   ip, (int)seq, (int)ttl, time);
+
+  fatal_error_check(error < 0, "printf");
+  calc_statistics(time);
+}
+
+static void packet_error(const unsigned char* buffer, const char* ip) {
+  const int     iphdr = sizeof(struct iphdr);
+  unsigned char type  = buffer[iphdr];
+  unsigned char code  = buffer[iphdr + 1];
+  int           bytes = BUFFER_SIZE - iphdr;
+  int           error;
+
+  error = printf("%d bytes from %s: ", bytes, ip);
+  switch (type) {
+    case DESTINATION_UNREACHABLE:
+      error = printf("Destination Unreachable");
+      break;
+    case TIME_EXCEEDED:
+      error = printf("Time exceeded");
+      break;
+    default:
+      break;
+  }
+  if (g_.options[(int)'v'])
+    error = printf(" type=%d code=%d\n", (int)type, (int)code);
+  else
+    error = printf("\n");
+  fatal_error_check(error < 0, "printf");
+}
+
+static void packet_return(unsigned char* buffer) {
+  unsigned short id     = get_id(buffer);
+  unsigned char  type   = buffer[sizeof(struct iphdr)];
   char           ip[16] = {0};
-  double         time   = latency();
-  int            error;
+
+  if (id != getpid())
+    return;
 
   inet_ntop(AF_INET, buffer + 12, ip, 16);
-  if (type == 0 && id == getpid()) {
-    if (g_.domain_name)
-      error = printf("%d bytes from %s (%s): imcp_seq=%d ttl=%d time=%.1f ms\n",
-                     bytes, g_.domain_name, ip, (int)icmp_seq, (int)ttl, time);
-    else
-      error = printf("%d bytes from %s: imcp_seq=%d ttl=%d time=%.1f ms\n",
-                     bytes, ip, (int)icmp_seq, (int)ttl, time);
-    calc_statistics(time);
+  if (type == 0) {
+    echo_reply(buffer, ip);
     g_.received_count++;
     g_.loss_count--;
   } else {
-    error = printf("%d bytes from %s: type=%d code=%d\n", bytes, ip, (int)type,
-                   (int)code);
+    packet_error(buffer, ip);
     g_.error_count++;
   }
-  fatal_error_check(error < 0, "printf");
 }
 
 void recv_ping() {
@@ -67,5 +114,5 @@ void recv_ping() {
   error = recvmsg(g_.sockfd, &msg, MSG_WAITALL);
   if (error < 0)
     return;
-  print_message(buffer);
+  packet_return(buffer);
 }

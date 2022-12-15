@@ -34,4 +34,11 @@ void     parse_arguments(int argc, char** argv);
 void     calc_statistics(double time);
 void     fatal_error_check(int condition, char* msg);
 
+enum icmp_error_type {
+  DESTINATION_UNREACHABLE = 3,
+  REDIRECT                = 5,
+  TIME_EXCEEDED           = 11,
+  PARAMETER_PROBLEM       = 12,
+};
+
 #endif

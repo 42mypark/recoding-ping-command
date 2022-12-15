@@ -169,13 +169,10 @@ static void get_dst_ip(const char* dst) {
   error = EAI_AGAIN;
   if (!is_ip) {
     ft_memset(&hints, 0, sizeof(hints));
-    hints.ai_family    = AF_INET;
-    hints.ai_socktype  = SOCK_RAW;
-    hints.ai_protocol  = 0; /* Any protocol */
-    hints.ai_canonname = NULL;
-    hints.ai_addr      = NULL;
-    hints.ai_next      = NULL;
-    hints.ai_flags = AI_PASSIVE | AI_CANONNAME; /* For wildcard IP address */
+    hints.ai_family   = AF_INET;
+    hints.ai_socktype = SOCK_RAW;
+    hints.ai_protocol = 0;                         /* Any protocol */
+    hints.ai_flags    = AI_PASSIVE | AI_CANONNAME; /* For wildcard IP address */
     while (error == EAI_AGAIN)
       error = getaddrinfo(dst, NULL, &hints, &res);
     if (error == EAI_NONAME) {
